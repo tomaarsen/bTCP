@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 
-import argparse
+import argparse, time
 from btcp.server_socket import BTCPServerSocket
 
 
@@ -12,11 +12,19 @@ def main():
     args = parser.parse_args()
 
     # Create a bTCP server socket
-    s = BTCPServerSocket(args.window, args.timeout)
+    socket = BTCPServerSocket(args.window, args.timeout)
     # TODO Write your file transfer server code here using your BTCPServerSocket's accept, and recv methods.
 
+    socket.accept()
+    #...
+    #socket.recv()
+    #...
+
+    #while 1:
+    #    time.sleep(1)
+
     # Clean up any state
-    s.close()
+    socket.close()
 
 
 main()

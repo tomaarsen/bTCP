@@ -40,10 +40,11 @@ def run_command(command,cwd=None, shell=True):
 
     if process.returncode:
         print("2. problem running command : \n   ", str(command), " ", process.returncode)
-        
 
 
-        
+import server_app
+import server_app
+
 class TestbTCPFramework(unittest.TestCase):
     """Test cases for bTCP"""
     
@@ -53,7 +54,7 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_add)
         
         # launch localhost server
-        
+        server_app.main()
 
     def tearDown(self):
         """Clean up after testing"""
@@ -61,6 +62,7 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_del)
         
         # close server
+        server_app
 
     def test_ideal_network(self):
         """reliability over an ideal framework"""

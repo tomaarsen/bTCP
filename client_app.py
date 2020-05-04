@@ -12,11 +12,16 @@ def main():
     args = parser.parse_args()
 
     # Create a bTCP client socket with the given window size and timeout value
-    s = BTCPClientSocket(args.window, args.timeout)
+    socket = BTCPClientSocket(args.window, args.timeout)
     # TODO Write your file transfer clientcode using your implementation of BTCPClientSocket's connect, send, and disconnect methods.
+    socket.connect()
+    #...
+    #socket.send(open(args.input, "r"))
+    #...
+    #socket.disconnect()
 
     # Clean up any state
-    s.close()
+    socket.close()
 
 
 main()
