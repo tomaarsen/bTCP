@@ -41,9 +41,8 @@ def run_command(command,cwd=None, shell=True):
     if process.returncode:
         print("2. problem running command : \n   ", str(command), " ", process.returncode)
 
-
-import server_app
-import server_app
+from btcp.server_socket import BTCPServerSocket
+from btcp.client_socket import BTCPClientSocket
 
 class TestbTCPFramework(unittest.TestCase):
     """Test cases for bTCP"""
@@ -54,7 +53,8 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_add)
         
         # launch localhost server
-        server_app.main()
+        self.serv_socket = BTCPServerSocket(args.window, args.timeout)
+        self.serv_socket.accept()
 
     def tearDown(self):
         """Clean up after testing"""
@@ -62,14 +62,16 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_del)
         
         # close server
-        server_app
+        self.serv_socket.close()
 
     def test_ideal_network(self):
         """reliability over an ideal framework"""
         # setup environment (nothing to set)
 
         # launch localhost client connecting to server
-        
+        socket = BTCPClientSocket(args.window, args.timeout)
+        socket.connect()
+
         # client sends content to server
         
         # server receives content from client
