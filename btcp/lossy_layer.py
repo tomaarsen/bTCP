@@ -1,3 +1,8 @@
+# ------------------------
+# Tom Aarsen   - s1027401
+# Bart Janssen - s4630270
+# ------------------------
+
 import socket, select, threading, time
 from btcp.constants import *
 from btcp.btcp_segment import BTCPSegment
@@ -37,5 +42,4 @@ class LossyLayer:
 
     # Put the segment into the network
     def send_segment(self, segment):
-        print(f"S: {str(BTCPSegment.convert_int_to_flags(BTCPSegment.unpack(segment)[2])):<15}")
         self._udp_sock.sendto(segment, (self._b_ip, self._b_port))

@@ -1,3 +1,7 @@
+# ------------------------
+# Tom Aarsen   - s1027401
+# Bart Janssen - s4630270
+# ------------------------
 
 import struct, random
 import numpy as np
@@ -51,87 +55,33 @@ class BTCPSegment:
             flags.add("FIN")
         return flags
 
-    #"""
     @staticmethod
-    def in_cksum(packet):
-        csum = 0
-        countTo = (len(packet) // 2) * 2
+    def get_checksum(packet):
+        # Round down to nearest multiple of 2
+        n = (len(packet) // 2) * 2
+        checksum = 0
 
-        for count in range(0, countTo, 2):
-            thisVal = packet[count+1] * 256 + packet[count]
-            csum = csum + thisVal
-            csum = csum & 0xffffffff
+        # Range from 0 to count with steps of 2 
+        for i in range(0, n, 2):
+            checksum += packet[i + 1] * 256 + packet[i]
+            checksum &= 0xffffffff
 
-        if countTo < len(packet):
-            csum = csum + packet[-1]
-            csum = csum & 0xffffffff
+        # If len(packet) is not a multiple of two, add the final packet
+        if n < len(packet):
+            checksum += packet[-1]
+            checksum &= 0xffffffff
 
-        csum = (csum >> 16) + (csum & 0xffff)
-        csum = csum + (csum >> 16)
-        answer = ~csum
-        answer = answer & 0xffff
-        answer = answer >> 8 | (answer << 8 & 0xff00)
-        return answer
-    #"""
-
-    """
-    @staticmethod
-    def in_cksum(data, sum_var=0):
-        # make 16 bit words out of every two adjacent 8 bit words in the packet
-        # and add them up
-        #print(data)
-        #data = data.decode("utf-8")
-        for i in range(0,len(data),2):
-            #if data[i] or data[i+1]:
-            #    print(data[i], data[i+1])
-            # The & 0xFF00 might not be necessary due to << 8
-            sum_var += (data[i] << 8) + data[i+1]
-
-        print("SV after summing:", sum_var)
-        
-        
-        # take only 16 bits out of the 32 bit sum and add up the carries
-        while (sum_var >> 16) > 0:
-            sum_var = (sum_var & 0xFFFF) + (sum_var >> 16)
-        print("SV after reducing:", sum_var)
-
-        # one's complement the result
-        sum_var = ~sum_var
-        print("SV after flipping:", sum_var)
-        return sum_var & 0xFFFF
-    """
-
-    """
-    @staticmethod
-    def adding(x, y):
-        z = x+y
-        if z > 2**16 - 1:
-            z = (z & 2**16 - 1) + 1
-        return z
-
-    # computes the Internet checksum
-    @staticmethod
-    def in_cksum(data):
-        addition = 0
-        
-        if len(data) % 2 != 0:
-            bytes(1) + data
-
-        integers = []
-        
-        for i in range(0, len(data), 2):
-            y = int.from_bytes(data[i:i+1], byteorder="big")
-            integers.append(y)
-
-        addition = BTCPSegment.adding(integers[0], integers[1])
-
-        for i in integers[2:]:
-            addition = BTCPSegment.adding(addition, i)
-
-        return ~np.uint16(addition)
-    """
+        # Remove overflow
+        checksum = (checksum >> 16) + (checksum & 0xffff)
+        checksum += (checksum >> 16)
+        # Flip and remove overflow
+        out = ~checksum
+        out &= 0xffff
+        out = out >> 8 | (out << 8 & 0xff00)
+        return out
 
     def _pack(self, checksum = 0):
+        # Place all values with the given checksum in a struct of the right format
         return struct.pack("!HHBBHH1008s", self.seq_n, 
                                      self.ack_n, 
                                      self.byte_flags, 
@@ -141,23 +91,24 @@ class BTCPSegment:
                                      self.data)
     
     def pack(self):
+        # Get the segment with an empty checksum
         data = self._pack()
-        #print(data)
-        #breakpoint()
-        checksum = self.in_cksum(data)
-        #print(checksum)
+        # Get the checksum over this segment
+        checksum = self.get_checksum(data)
+        # And get the segment with the actual checksum value filled in.
         return self._pack(checksum)
 
     @staticmethod
     def unpack(data):
+        # Unpack a segment using the format
         return struct.unpack("!HHBBHH1008s", data)
 
 class SYNSegment(BTCPSegment):
     def __init__(self, window):
         # For SYN segments, seq_n is random
-        seq_n = 20#random.randrange(0, 65535)
+        seq_n = random.randrange(0, 65535)
         ack_n = 0
-        super().__init__(seq_n, ack_n, window, b"")#Hello how are you doing, this is random text to fill up this data section")
+        super().__init__(seq_n, ack_n, window, b"")
         self.flags["SYN"] = 1
         self.byte_flags = self.convert_flags_to_int()
 
@@ -192,16 +143,3 @@ class FINACKSegment(BTCPSegment):
         self.flags["FIN"] = 1
         self.byte_flags = self.convert_flags_to_int()
 
-"""
-if __name__ == "__main__":
-    segment = SYNSegment(100)
-    #checksum = BTCPSegment.unpack(segment.pack())[-2]
-    #print(checksum)
-    packed = segment.pack()
-    out = BTCPSegment.in_cksum(packed)
-    #out2 = BTCPSegment.in_cksum(segment.pack())
-
-    # 59803
-    # 65513
-    breakpoint()
-#"""
